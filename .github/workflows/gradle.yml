@@ -33,3 +33,5 @@ jobs:
       env:
         HEROKU_REGISTRY_URL: registry.heroku.com
         HEROKU_TOKEN: ${{ secrets.HEROKU_TOKEN }}
+      run:
+        heroku container:login
