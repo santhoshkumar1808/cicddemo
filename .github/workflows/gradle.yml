@@ -10,10 +10,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  init:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 8
@@ -21,33 +19,30 @@ jobs:
       with:
         java-version: '8'
         distribution: 'adopt'
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+  test:
+     - name: test with Gradle
+      run: ./gradlew test
+  build:
     - name: Build with Gradle
       run: ./gradlew build
-
+  docker:
     - name: Build the Docker image
-      run:
-      docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/my-awesome-app/my-app .
+      run: docker build . --file Dockerfile --tag cicddemo
+  heroku:
+    - name: login to heroku
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
+      run: heroku container:login
 
-    - name: Build the Docker image1
-      run:
-      docker login -u _ -p $HEROKU_TOKEN registry.heroku.com
+    - name: Build and push
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
+      run: heroku container:push -a bookappdevbootcamp web
 
-    - name: Build the Docker image2
-      run:
-      docker push registry.heroku.com/my-awesome-app/my-app
-
-    - name: Build the Docker image3
-      run:
-      apk add --no-cache curl
-
-    - name: Build the Docker image4
-      run:
-      echo "Docker Image ID is $(cat imageid.txt)"
-
-    - name: Build the Docker image5
-      run: curl -X PATCH https://api.heroku.com/apps/my-awesome-app/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer ${HEROKU_TOKEN}" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }'
-
-
-
+    - name: Release
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
+      run: heroku container:release -a bookappdevbootcamp web
