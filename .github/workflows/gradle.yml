@@ -27,12 +27,12 @@ jobs:
       run: ./gradlew build
 
     - name: Build the Docker image
-      run:
+      run: >
       docker build -f Dockerfile --iidfile imageid.txt -t registry.heroku.com/my-awesome-app/my-app .
       docker login -u _ -p $HEROKU_TOKEN registry.heroku.com
       docker push registry.heroku.com/my-awesome-app/my-app
       apk add --no-cache curl
       echo "Docker Image ID is $(cat imageid.txt)"
-      - |-
-        curl -X PATCH https://api.heroku.com/apps/my-awesome-app/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer ${HEROKU_TOKEN}" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }'
+      with:
+        curl: -X PATCH https://api.heroku.com/apps/my-awesome-app/formation --header "Content-Type: application/json" --header "Accept: application/vnd.heroku+json; version=3.docker-releases" --header "Authorization: Bearer ${HEROKU_TOKEN}" --data '{ "updates": [ { "type": "web", "docker_image": "'$(cat imageid.txt)'" } ] }'
 
